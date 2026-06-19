@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { reportSchema } from '@/lib/validations/schemas';
 
@@ -12,7 +13,7 @@ export async function reportListingAction(formData: FormData) {
   });
 
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? 'Invalid input' };
+    throw new Error(parsed.error.issues[0]?.message ?? 'Invalid input');
   }
 
   const supabase = await createClient();
@@ -22,8 +23,15 @@ export async function reportListingAction(formData: FormData) {
     reason: parsed.data.reason,
   });
 
-  if (error) return { error: error.message };
-  return { success: true };
+  if (error) throw new Error(error.message);
+
+  const { data: listing } = await supabase
+    .from('listings')
+    .select('slug')
+    .eq('id', parsed.data.listing_id)
+    .single();
+
+  redirect(`/listings/${listing?.slug ?? ''}?reported=1`);
 }
 
 export async function suspendAdvertiserAction(advertiserId: string) {
@@ -39,7 +47,6 @@ export async function suspendAdvertiserAction(advertiserId: string) {
     .eq('advertiser_id', advertiserId);
 
   revalidatePath('/admin/advertisers');
-  return { success: true };
 }
 
 export async function toggleListingFeaturedAction(listingId: string, featured: boolean) {
@@ -49,9 +56,8 @@ export async function toggleListingFeaturedAction(listingId: string, featured: b
     .update({ is_featured: featured })
     .eq('id', listingId);
 
-  if (error) return { error: error.message };
+  if (error) throw new Error(error.message);
   revalidatePath('/admin/listings');
-  return { success: true };
 }
 
 export async function updateReportStatusAction(reportId: string, status: string) {
@@ -61,9 +67,8 @@ export async function updateReportStatusAction(reportId: string, status: string)
     .update({ status })
     .eq('id', reportId);
 
-  if (error) return { error: error.message };
+  if (error) throw new Error(error.message);
   revalidatePath('/admin/reports');
-  return { success: true };
 }
 
 export async function updatePlanAction(planId: string, formData: FormData) {
@@ -78,12 +83,11 @@ export async function updatePlanAction(planId: string, formData: FormData) {
     })
     .eq('id', planId);
 
-  if (error) return { error: error.message };
+  if (error) throw new Error(error.message);
   revalidatePath('/admin/plans');
-  return { success: true };
 }
 
 export async function adminSignInAction(formData: FormData) {
   const { signInAction } = await import('@/actions/auth');
-  return signInAction(formData);
+  await signInAction(formData);
 }

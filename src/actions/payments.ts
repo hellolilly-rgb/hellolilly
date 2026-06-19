@@ -17,7 +17,7 @@ export async function createPaymentRequestAction(planId: string) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { error: 'Not authenticated' };
+  if (!user) throw new Error('Not authenticated');
 
   const { data: advertiser } = await supabase
     .from('advertiser_profiles')
@@ -25,25 +25,21 @@ export async function createPaymentRequestAction(planId: string) {
     .eq('user_id', user.id)
     .single();
 
-  if (!advertiser) return { error: 'Complete your profile first' };
+  if (!advertiser) throw new Error('Complete your profile first');
 
   const { data: plan } = await supabase.from('plans').select('*').eq('id', planId).single();
-  if (!plan || plan.slug === 'free') return { error: 'Invalid plan' };
+  if (!plan || plan.slug === 'free') throw new Error('Invalid plan');
 
   const referenceCode = generateReferenceCode();
 
-  const { data: request, error } = await supabase
-    .from('payment_requests')
-    .insert({
-      advertiser_id: advertiser.id,
-      plan_id: planId,
-      reference_code: referenceCode,
-      status: 'awaiting_payment',
-    })
-    .select('*')
-    .single();
+  const { error } = await supabase.from('payment_requests').insert({
+    advertiser_id: advertiser.id,
+    plan_id: planId,
+    reference_code: referenceCode,
+    status: 'awaiting_payment',
+  });
 
-  if (error) return { error: error.message };
+  if (error) throw new Error(error.message);
 
   const email = paymentRequestEmail(
     advertiser.display_name,
@@ -58,7 +54,6 @@ export async function createPaymentRequestAction(planId: string) {
   );
 
   revalidatePath('/dashboard/plans');
-  return { success: true, request };
 }
 
 export async function markPaymentProofReceivedAction(requestId: string) {
@@ -68,9 +63,8 @@ export async function markPaymentProofReceivedAction(requestId: string) {
     .update({ status: 'proof_received' })
     .eq('id', requestId);
 
-  if (error) return { error: error.message };
+  if (error) throw new Error(error.message);
   revalidatePath('/admin/payments');
-  return { success: true };
 }
 
 export async function activatePaymentRequestAction(requestId: string) {
@@ -78,7 +72,7 @@ export async function activatePaymentRequestAction(requestId: string) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { error: 'Not authenticated' };
+  if (!user) throw new Error('Not authenticated');
 
   const { data: request } = await supabase
     .from('payment_requests')
@@ -86,7 +80,7 @@ export async function activatePaymentRequestAction(requestId: string) {
     .eq('id', requestId)
     .single();
 
-  if (!request) return { error: 'Request not found' };
+  if (!request) throw new Error('Request not found');
 
   const plan = request.plans;
   const endsAt = new Date();
@@ -131,7 +125,6 @@ export async function activatePaymentRequestAction(requestId: string) {
 
   revalidatePath('/admin/payments');
   revalidatePath('/dashboard/plans');
-  return { success: true };
 }
 
 export async function activateFreePlanAction() {
@@ -139,7 +132,7 @@ export async function activateFreePlanAction() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { error: 'Not authenticated' };
+  if (!user) throw new Error('Not authenticated');
 
   const { data: advertiser } = await supabase
     .from('advertiser_profiles')
@@ -148,11 +141,11 @@ export async function activateFreePlanAction() {
     .single();
 
   if (!advertiser || advertiser.status !== 'verified') {
-    return { error: 'You must be verified first' };
+    throw new Error('You must be verified first');
   }
 
   const { data: freePlan } = await supabase.from('plans').select('*').eq('slug', 'free').single();
-  if (!freePlan) return { error: 'Free plan not found' };
+  if (!freePlan) throw new Error('Free plan not found');
 
   const { data: existing } = await supabase
     .from('subscriptions')
@@ -161,7 +154,7 @@ export async function activateFreePlanAction() {
     .eq('status', 'active')
     .maybeSingle();
 
-  if (existing) return { success: true, message: 'Already active' };
+  if (existing) return;
 
   const endsAt = new Date();
   endsAt.setDate(endsAt.getDate() + freePlan.billing_period_days);
@@ -174,9 +167,8 @@ export async function activateFreePlanAction() {
     ends_at: endsAt.toISOString(),
   });
 
-  if (error) return { error: error.message };
+  if (error) throw new Error(error.message);
   revalidatePath('/dashboard/plans');
-  return { success: true };
 }
 
 export async function expireSubscriptionsCron() {

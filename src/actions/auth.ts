@@ -13,7 +13,7 @@ export async function signUpAction(formData: FormData) {
   });
 
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? 'Invalid input' };
+    throw new Error(parsed.error.issues[0]?.message ?? 'Invalid input');
   }
 
   const supabase = await createClient();
@@ -25,8 +25,8 @@ export async function signUpAction(formData: FormData) {
     },
   });
 
-  if (error) return { error: error.message };
-  if (!data.user) return { error: 'Sign up failed' };
+  if (error) throw new Error(error.message);
+  if (!data.user) throw new Error('Sign up failed');
 
   redirect('/dashboard/onboarding');
 }
@@ -38,13 +38,13 @@ export async function signInAction(formData: FormData) {
   });
 
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? 'Invalid input' };
+    throw new Error(parsed.error.issues[0]?.message ?? 'Invalid input');
   }
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword(parsed.data);
 
-  if (error) return { error: error.message };
+  if (error) throw new Error(error.message);
 
   const next = formData.get('next') as string | null;
   redirect(next && next.startsWith('/') ? next : '/dashboard');
@@ -58,13 +58,13 @@ export async function signOutAction() {
 
 export async function resetPasswordAction(formData: FormData) {
   const email = formData.get('email') as string;
-  if (!email) return { error: 'Email required' };
+  if (!email) throw new Error('Email required');
 
   const supabase = await createClient();
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/login`,
   });
 
-  if (error) return { error: error.message };
-  return { success: 'Check your email for a reset link.' };
+  if (error) throw new Error(error.message);
+  redirect('/auth/forgot-password?sent=1');
 }

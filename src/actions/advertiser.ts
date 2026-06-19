@@ -11,7 +11,7 @@ export async function createAdvertiserProfileAction(formData: FormData) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { error: 'Not authenticated' };
+  if (!user) throw new Error('Not authenticated');
 
   const accountType = (user.user_metadata?.account_type ??
     formData.get('account_type')) as 'independent' | 'agency';
@@ -25,7 +25,7 @@ export async function createAdvertiserProfileAction(formData: FormData) {
   });
 
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? 'Invalid input' };
+    throw new Error(parsed.error.issues[0]?.message ?? 'Invalid input');
   }
 
   const { data: existing } = await supabase
@@ -39,18 +39,18 @@ export async function createAdvertiserProfileAction(formData: FormData) {
       .from('advertiser_profiles')
       .update(parsed.data)
       .eq('user_id', user.id);
-    if (error) return { error: error.message };
+    if (error) throw new Error(error.message);
     revalidatePath('/dashboard');
     revalidatePath('/dashboard/profile');
-    return { success: true };
-  } else {
-    const { error } = await supabase.from('advertiser_profiles').insert({
-      user_id: user.id,
-      account_type: accountType ?? 'independent',
-      ...parsed.data,
-    });
-    if (error) return { error: error.message };
+    redirect('/dashboard/profile');
   }
+
+  const { error } = await supabase.from('advertiser_profiles').insert({
+    user_id: user.id,
+    account_type: accountType ?? 'independent',
+    ...parsed.data,
+  });
+  if (error) throw new Error(error.message);
 
   revalidatePath('/dashboard');
   redirect(accountType === 'agency' ? '/dashboard/agency' : '/dashboard/listings/new');
@@ -61,7 +61,7 @@ export async function createAgencyAction(formData: FormData) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { error: 'Not authenticated' };
+  if (!user) throw new Error('Not authenticated');
 
   const parsed = agencySchema.safeParse({
     name: formData.get('name'),
@@ -69,7 +69,7 @@ export async function createAgencyAction(formData: FormData) {
   });
 
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? 'Invalid input' };
+    throw new Error(parsed.error.issues[0]?.message ?? 'Invalid input');
   }
 
   const { data: advertiser } = await supabase
@@ -78,7 +78,7 @@ export async function createAgencyAction(formData: FormData) {
     .eq('user_id', user.id)
     .single();
 
-  if (!advertiser) return { error: 'Complete your profile first' };
+  if (!advertiser) throw new Error('Complete your profile first');
 
   const slug = slugify(parsed.data.name);
   const { error } = await supabase.from('agencies').upsert(
@@ -92,7 +92,7 @@ export async function createAgencyAction(formData: FormData) {
     { onConflict: 'owner_user_id' }
   );
 
-  if (error) return { error: error.message };
+  if (error) throw new Error(error.message);
 
   revalidatePath('/dashboard');
   redirect('/dashboard/listings/new');

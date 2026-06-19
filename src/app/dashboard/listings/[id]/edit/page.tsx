@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import type { ListingMedia } from '@/types/database';
 import Image from 'next/image';
 import { requireAdvertiser } from '@/lib/auth/require-advertiser';
 import { createClient } from '@/lib/supabase/server';
@@ -118,7 +119,7 @@ export default async function EditListingPage({
         <CardHeader><h2 className="font-medium">Photos</h2></CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-3 gap-3">
-            {listing.listing_media?.map((media) => (
+            {listing.listing_media?.map((media: ListingMedia) => (
               <div key={media.id} className="relative aspect-square rounded-lg overflow-hidden bg-bg-elevated">
                 <Image
                   src={getPublicMediaUrl(media.storage_path)}

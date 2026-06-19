@@ -18,11 +18,14 @@ export function VideoUploadForm() {
     setLoading(true);
 
     const formData = new FormData(e.currentTarget);
-    const result = await submitVerificationVideoAction(formData);
-
-    setLoading(false);
-    if (result.error) setError(result.error);
-    else setSuccess(true);
+    try {
+      await submitVerificationVideoAction(formData);
+      setSuccess(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Upload failed');
+    } finally {
+      setLoading(false);
+    }
   }
 
   if (success) {

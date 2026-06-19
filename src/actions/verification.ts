@@ -14,11 +14,11 @@ export async function submitVerificationVideoAction(formData: FormData) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { error: 'Not authenticated' };
+  if (!user) throw new Error('Not authenticated');
 
   const file = formData.get('video') as File;
-  if (!file?.size) return { error: 'No video selected' };
-  if (file.size > 50 * 1024 * 1024) return { error: 'Video must be under 50MB' };
+  if (!file?.size) throw new Error('No video selected');
+  if (file.size > 50 * 1024 * 1024) throw new Error('Video must be under 50MB');
 
   const { data: advertiser } = await supabase
     .from('advertiser_profiles')
@@ -26,7 +26,7 @@ export async function submitVerificationVideoAction(formData: FormData) {
     .eq('user_id', user.id)
     .single();
 
-  if (!advertiser) return { error: 'Complete your profile first' };
+  if (!advertiser) throw new Error('Complete your profile first');
 
   const ext = file.name.split('.').pop() ?? 'mp4';
   const path = `${user.id}/${Date.now()}.${ext}`;
@@ -35,7 +35,7 @@ export async function submitVerificationVideoAction(formData: FormData) {
     .from('verification-videos')
     .upload(path, file, { upsert: false });
 
-  if (uploadError) return { error: uploadError.message };
+  if (uploadError) throw new Error(uploadError.message);
 
   const { error: dbError } = await supabase.from('verification_submissions').insert({
     advertiser_id: advertiser.id,
@@ -43,7 +43,7 @@ export async function submitVerificationVideoAction(formData: FormData) {
     status: 'pending',
   });
 
-  if (dbError) return { error: dbError.message };
+  if (dbError) throw new Error(dbError.message);
 
   await supabase
     .from('advertiser_profiles')
@@ -58,7 +58,6 @@ export async function submitVerificationVideoAction(formData: FormData) {
   );
 
   revalidatePath('/dashboard/verification');
-  return { success: true };
 }
 
 export async function approveVerificationAction(submissionId: string) {
@@ -66,7 +65,7 @@ export async function approveVerificationAction(submissionId: string) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { error: 'Not authenticated' };
+  if (!user) throw new Error('Not authenticated');
 
   const { data: submission } = await supabase
     .from('verification_submissions')
@@ -74,7 +73,7 @@ export async function approveVerificationAction(submissionId: string) {
     .eq('id', submissionId)
     .single();
 
-  if (!submission) return { error: 'Submission not found' };
+  if (!submission) throw new Error('Submission not found');
 
   await supabase
     .from('verification_submissions')
@@ -112,7 +111,6 @@ export async function approveVerificationAction(submissionId: string) {
   }
 
   revalidatePath('/admin/verifications');
-  return { success: true };
 }
 
 export async function rejectVerificationAction(submissionId: string, reason: string) {
@@ -120,7 +118,7 @@ export async function rejectVerificationAction(submissionId: string, reason: str
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { error: 'Not authenticated' };
+  if (!user) throw new Error('Not authenticated');
 
   const { data: submission } = await supabase
     .from('verification_submissions')
@@ -128,7 +126,7 @@ export async function rejectVerificationAction(submissionId: string, reason: str
     .eq('id', submissionId)
     .single();
 
-  if (!submission) return { error: 'Submission not found' };
+  if (!submission) throw new Error('Submission not found');
 
   await supabase
     .from('verification_submissions')
@@ -146,5 +144,4 @@ export async function rejectVerificationAction(submissionId: string, reason: str
     .eq('id', submission.advertiser_id);
 
   revalidatePath('/admin/verifications');
-  return { success: true };
 }
