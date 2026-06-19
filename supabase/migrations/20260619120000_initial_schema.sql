@@ -5,6 +5,14 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 -- Admin helper schema
 CREATE SCHEMA IF NOT EXISTS private;
 
+-- Admin users (must exist before is_admin function)
+CREATE TABLE IF NOT EXISTS public.admin_users (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL UNIQUE REFERENCES auth.users(id) ON DELETE CASCADE,
+  email text NOT NULL UNIQUE,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
 CREATE OR REPLACE FUNCTION private.is_admin()
 RETURNS boolean
 LANGUAGE sql
@@ -21,16 +29,9 @@ $$;
 REVOKE ALL ON FUNCTION private.is_admin() FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION private.is_admin() TO authenticated, anon;
 
--- Admin users
-CREATE TABLE public.admin_users (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid NOT NULL UNIQUE REFERENCES auth.users(id) ON DELETE CASCADE,
-  email text NOT NULL UNIQUE,
-  created_at timestamptz NOT NULL DEFAULT now()
-);
-
 ALTER TABLE public.admin_users ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS admin_users_select ON public.admin_users;
 CREATE POLICY admin_users_select ON public.admin_users
   FOR SELECT TO authenticated
   USING (private.is_admin());

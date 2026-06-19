@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   },
   description:
     'India\'s premium verified classified platform. Browse listings by city or post your ad as an independent or agency.',
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'https://hellolilly.in'),
 };
 
 export default function RootLayout({

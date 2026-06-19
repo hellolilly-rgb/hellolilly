@@ -11,7 +11,7 @@ function getResend() {
   return resend;
 }
 
-const from = () => process.env.EMAIL_FROM ?? 'noreply@hellolilly.com';
+const from = () => process.env.EMAIL_FROM ?? 'noreply@hellolilly.in';
 const adminEmail = () => process.env.ADMIN_EMAIL ?? '';
 
 export async function sendEmail({

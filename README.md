@@ -36,10 +36,10 @@ NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 RESEND_API_KEY=
-EMAIL_FROM=noreply@yourdomain.com
-ADMIN_EMAIL=admin@yourdomain.com
+EMAIL_FROM=noreply@hellolilly.in
+ADMIN_EMAIL=admin@hellolilly.in
 NEXT_PUBLIC_ADMIN_WHATSAPP=91XXXXXXXXXX
-NEXT_PUBLIC_SITE_URL=http://localhost:3000
+NEXT_PUBLIC_SITE_URL=https://hellolilly.in
 CRON_SECRET=your-secret
 ```
 
@@ -59,7 +59,7 @@ Or apply `supabase/migrations/20260619120000_initial_schema.sql` via the Supabas
 
 ```sql
 INSERT INTO admin_users (user_id, email)
-VALUES ('YOUR_USER_UUID', 'admin@yourdomain.com');
+VALUES ('YOUR_USER_UUID', 'admin@hellolilly.in');
 ```
 
 ### 5. Start dev server
@@ -68,7 +68,7 @@ VALUES ('YOUR_USER_UUID', 'admin@yourdomain.com');
 npm run dev
 ```
 
-Visit [http://localhost:3000](http://localhost:3000)
+Visit [https://hellolilly.in](https://hellolilly.in) (or `http://localhost:3000` locally)
 
 ## Deployment (Vercel)
 
