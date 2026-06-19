@@ -1,0 +1,11 @@
+[project]
+id = "hellolilly"
+
+[api]
+enabled = true
+
+[db]
+major_version = 15
+
+[storage]
+enabled = true

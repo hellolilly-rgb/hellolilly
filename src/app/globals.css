@@ -1,0 +1,65 @@
+@import "tailwindcss";
+@import "../styles/tokens.css";
+
+@theme inline {
+  --color-bg-base: var(--bg-base);
+  --color-bg-surface: var(--bg-surface);
+  --color-bg-elevated: var(--bg-elevated);
+  --color-accent-gold: var(--accent-gold);
+  --color-accent-gold-light: var(--accent-gold-light);
+  --color-accent-blush: var(--accent-blush);
+  --color-accent-rose: var(--accent-rose);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-border-subtle: var(--border-subtle);
+  --color-border-glow: var(--border-glow);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-error: var(--error);
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-body), system-ui, sans-serif;
+  min-height: 100vh;
+}
+
+.glass-card {
+  background: var(--bg-glass);
+  border: 1px solid var(--border-subtle);
+  backdrop-filter: blur(12px);
+}
+
+.gold-gradient-text {
+  background: linear-gradient(135deg, var(--accent-gold-light), var(--accent-gold));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.featured-ribbon {
+  background: linear-gradient(135deg, var(--accent-gold), var(--accent-rose));
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.shimmer {
+  background: linear-gradient(90deg, transparent, rgba(201, 168, 124, 0.15), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
